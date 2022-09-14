@@ -45,6 +45,8 @@ services:
     container_name: app
     build: ./api       
     entrypoint: dockerize -wait tcp://db:5432 -timeout 40s ./entrypoint.sh 
+    env_file:
+     - ./api/.env
     ports:
       - 3333:3333
     volumes:
@@ -53,4 +55,20 @@ services:
       - "host.docker.internal:172.17.0.1"
     depends_on:
       - db
-    
+  prisma-studio:
+    container_name: prisma
+    restart: always
+    links:
+      - db
+    depends_on:
+      - db
+    env_file:
+     - ./api/.env
+    ports:
+      - '5555:5555'
+    build:     
+      dockerfile: ./.docker/prisma/Dockerfile
+    environment:
+      POSTGRES_URL: ${DATABASE_URL}
+    volumes:
+      - ./api/prisma:/app/prisma
